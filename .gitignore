@@ -20,4 +20,7 @@ pip-delete-this-directory.txt
 dvc_storage/
 
 # Other
-.DS_Store
+.DS_Storedata/raw
+data/processed
+data/featured
+data/model
