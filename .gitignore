@@ -24,3 +24,4 @@ dvc_storage/
 data/processed
 data/featured
 data/model
+.env
