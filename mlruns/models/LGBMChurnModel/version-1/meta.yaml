@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1756464142061
+current_stage: None
+description: null
+last_updated_timestamp: 1756464142061
+name: LGBMChurnModel
+run_id: 1c254c482afc421893d16d432631940b
+run_link: null
+source: file:///Users/abhishekkapoor/Datascience/MLOPs%20gemin/kkbox_churn_pipeline/mlruns/734452378901054708/1c254c482afc421893d16d432631940b/artifacts/model
+status: READY
+status_message: null
+storage_location: file:///Users/abhishekkapoor/Datascience/MLOPs%20gemin/kkbox_churn_pipeline/mlruns/734452378901054708/1c254c482afc421893d16d432631940b/artifacts/model
+user_id: null
+version: 1

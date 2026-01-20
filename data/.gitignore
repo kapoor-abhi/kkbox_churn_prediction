@@ -1,1 +1,6 @@
 /raw
+/processed
+/featured
+/model
+/drift_report_deepchecks.html
+/integrity_report.html

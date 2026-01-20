@@ -1,145 +1,111 @@
+import os
 import joblib
 import pandas as pd
 import numpy as np
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
-import uvicorn
-import os
 import logging
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from prometheus_fastapi_instrumentator import Instrumentator
 
-# --- 1. Setup Logging ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Setup Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# --- 2. Configuration ---
-ARTIFACTS_DIR = "data/model"
-MODEL_PATH = os.path.join(ARTIFACTS_DIR, "lgbm_model.pkl")
-SCALER_PATH = os.path.join(ARTIFACTS_DIR, "scaler_fold_1.pkl")
+# Load Artifacts
+MODEL_PATH = "data/model/lgbm_model.pkl"
+PROCESSOR_PATH = "data/model/feature_processor.pkl"
+SCALER_PATH = "data/model/scaler.pkl"
+ENCODERS_PATH = "data/model/encoders.pkl"
 
-# --- 3. Global Artifacts Storage ---
-artifacts = {}
+app = FastAPI(title="KKBox Churn Prediction API", version="2.0.0")
 
-# --- 4. FastAPI App Initialization ---
-app = FastAPI(
-    title="KKBox Churn Prediction API (Simplified)",
-    description="An API that takes minimal user inputs, performs feature engineering, and predicts churn.",
-    version="2.0.0"
-)
+# Initialize Prometheus Monitoring
+Instrumentator().instrument(app).expose(app)
 
-# --- 5. Lifespan Events (Startup/Shutdown) ---
+# Global variables for artifacts
+model = None
+processor = None
+scaler = None
+encoders = None
+
 @app.on_event("startup")
-async def load_artifacts():
-    """Loads model and artifacts on server startup."""
-    logging.info("Loading model and artifacts...")
+def load_models():
+    global model, processor, scaler, encoders
     try:
         model = joblib.load(MODEL_PATH)
+        processor = joblib.load(PROCESSOR_PATH)
         scaler = joblib.load(SCALER_PATH)
-        artifacts['model'] = model
-        artifacts['scaler'] = scaler
-        artifacts['model_columns'] = model.feature_name_
-        artifacts['numeric_columns_to_scale'] = scaler.get_feature_names_out()
-        logging.info("Artifacts loaded successfully.")
-    except FileNotFoundError as e:
-        logging.error(f"Error loading artifacts: {e}. Ensure pipeline has been run.")
-        artifacts['model'] = None
+        encoders = joblib.load(ENCODERS_PATH)
+        logger.info(" All MLOps artifacts loaded successfully.")
+    except Exception as e:
+        logger.error(f" Failed to load artifacts: {e}")
 
-# --- 6. SIMPLIFIED Pydantic Input Model ---
-# This model only asks for the raw, fundamental features.
-class UserInput(BaseModel):
-    # Member features
-    city: int = Field(..., example=1, description="City of the user.")
-    bd: int = Field(..., example=30, description="Age of the user.")
-    gender: str = Field(..., example="male", description="Gender ('male', 'female', or 'unknown').")
-    registered_via: int = Field(..., example=7, description="Registration method ID.")
-    
-    # Base Transaction features
-    total_transactions: int = Field(..., example=12, gt=0) # Greater than 0 to avoid division by zero
-    total_payment: float = Field(..., example=1788.0)
-    avg_plan_days: int = Field(..., example=30)
-    total_cancel_count: int = Field(..., example=0)
-    promo_transaction_count: int = Field(..., example=1)
-    days_since_last_transaction: int = Field(..., example=20)
+# Pydantic model for input validation
+from typing import Optional
 
-    # Base User log features
-    total_secs_played: float = Field(..., example=250000.0)
-    total_unique_songs: int = Field(..., example=800)
-    total_songs_played: int = Field(..., example=1000, gt=0) # Greater than 0
-    total_songs_100_percent: int = Field(..., example=850)
-    active_days: int = Field(..., example=28)
-    days_since_last_listen: int = Field(..., example=3)
+class ChurnInput(BaseModel):
+    # msno is now optional. If not provided, we use a placeholder.
+    msno: Optional[str] = "unknown_user" 
+    city: int
+    bd: int
+    gender: str
+    registered_via: int
+    total_transactions: int
+    total_payment: float
+    total_cancel_count: int
+    promo_transaction_count: int
+    active_days: int
+    total_secs_played: float
+    total_unique_songs: int
+    total_songs_played: int
+    total_songs_100_percent: int
+    # Optional Trend fields
+    active_days_first_half: int = 0
+    active_days_second_half: int = 0
+    total_secs_first_half: float = 0.0
+    total_secs_second_half: float = 0.0
 
-# --- 7. API Endpoints ---
-@app.get("/")
-def read_root():
-    return {"status": "API is running."}
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "model_loaded": model is not None}
 
 @app.post("/predict")
-async def predict_churn(user_input: UserInput):
-    """
-    Predicts customer churn from raw features.
-    This endpoint performs all necessary feature engineering internally.
-    """
-    if not artifacts.get('model'):
-        raise HTTPException(status_code=503, detail="Model is not available.")
+async def predict(input_data: ChurnInput):
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
 
-    logging.info("Received prediction request. Starting feature engineering...")
-    
-    # --- Internal Feature Engineering Pipeline ---
-    # 1. Convert Pydantic model to a pandas DataFrame
-    input_df = pd.DataFrame([user_input.dict()])
-    epsilon = 1e-6 # To prevent division by zero
-
-    # 2. Create Derived Transaction Features
-    input_df['avg_payment_value'] = input_df['total_payment'] / (input_df['total_transactions'] + epsilon)
-    input_df['cancel_rate'] = input_df['total_cancel_count'] / (input_df['total_transactions'] + epsilon)
-    input_df['promo_ratio'] = input_df['promo_transaction_count'] / (input_df['total_transactions'] + epsilon)
-
-    # 3. Create Derived User Log Features
-    input_df['avg_secs_played_daily'] = input_df['total_secs_played'] / (input_df['active_days'] + epsilon)
-    input_df['avg_unique_songs_daily'] = input_df['total_unique_songs'] / (input_df['active_days'] + epsilon)
-    input_df['completion_rate'] = input_df['total_songs_100_percent'] / (input_df['total_songs_played'] + epsilon)
-    input_df['uniqueness_rate'] = input_df['total_unique_songs'] / (input_df['total_songs_played'] + epsilon)
-
-    # 4. Create Advanced/Defaulted Features
-    input_df['activity_trend_abs'] = 0.0  # Default value
-    input_df['secs_trend_ratio'] = 1.0    # Default value (no change)
-
-    # 5. Create Categorical Features for Encoding
-    age_bins = [0, 18, 25, 35, 50, 80]
-    age_labels = ['0-18', '19-25', '26-35', '36-50', '51-80']
-    input_df['age_group'] = pd.cut(input_df['bd'], bins=age_bins, labels=age_labels, right=False)
-    input_df['age_group'] = input_df['age_group'].cat.add_categories('Unknown').fillna('Unknown')
-    input_df['gender'] = input_df['gender'].str.lower().fillna('unknown')
-    
-    # 6. Perform One-Hot Encoding
-    categorical_features = ['gender', 'city', 'registered_via', 'age_group']
-    input_df = pd.get_dummies(input_df, columns=categorical_features, dummy_na=False)
-
-    # 7. Align columns with the model's training data (CRITICAL STEP)
-    model_columns = artifacts['model_columns']
-    input_df = input_df.reindex(columns=model_columns, fill_value=0)
-
-    # 8. Apply the StandardScaler
-    cols_to_scale = [col for col in artifacts['numeric_columns_to_scale'] if col in input_df.columns]
-    if cols_to_scale:
-        input_df[cols_to_scale] = artifacts['scaler'].transform(input_df[cols_to_scale])
-    
-    logging.info("Feature engineering complete. Making prediction.")
-
-    # --- Prediction ---
     try:
-        prediction_proba = artifacts['model'].predict_proba(input_df)[:, 1]
-        churn_probability = float(prediction_proba[0])
+        # 1. Convert input to DataFrame
+        input_df = pd.DataFrame([input_data.dict()])
+
+        # 2. Use the SAME processor from training (Handles Ratios, Age Bins, Cleaning)
+        processed_df = processor.transform(input_df)
+
+        # 3. Apply Label Encoders (Ensures category 1 in train is category 1 in serve)
+        for col, le in encoders.items():
+            if col in processed_df.columns:
+                # Handle unseen labels by mapping to a default/str
+                processed_df[col] = processed_df[col].astype(str)
+                processed_df[col] = le.transform(processed_df[col])
+
+        # 4. Scale numeric features
+        numeric_cols = scaler.feature_names_in_
+        processed_df[numeric_cols] = scaler.transform(processed_df[numeric_cols])
+
+        # 5. Predict (Ensure column order matches training)
+        feature_order = model.feature_name_
+        final_df = processed_df[feature_order]
+        
+        probability = model.predict_proba(final_df)[:, 1][0]
+        prediction = bool(probability > 0.5)
+
+        return {
+            "msno": input_data.msno,
+            "churn_probability": float(round(probability, 4)),
+            "prediction": "Churn" if prediction else "Stay",
+            "model_version": "v2-lgbm"
+        }
+
     except Exception as e:
-        logging.error(f"Error during prediction: {e}")
-        raise HTTPException(status_code=500, detail="Could not make a prediction.")
-
-    # --- Return Response ---
-    return {
-        "churn_probability": round(churn_probability, 4),
-        "will_churn": bool(churn_probability > 0.5),
-        "model_version": "2.0"
-    }
-
-# --- 8. Main execution block ---
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        logger.error(f"Prediction error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

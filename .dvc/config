@@ -1,4 +1,8 @@
 [core]
-    remote = local_remote
+    remote = r2-remote
 ['remote "local_remote"']
     url = /Users/abhishekkapoor/Datascience/MLOPs gemin/dvc_storage
+['remote "r2-remote"']
+    url = s3://kkbox-chrun-remote
+    endpointurl = https://a21a46bd98047371b55e3d287ae424d5.r2.cloudflarestorage.com
+    region = auto

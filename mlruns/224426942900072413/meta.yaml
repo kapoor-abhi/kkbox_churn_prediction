@@ -1,0 +1,6 @@
+artifact_location: file:///Users/abhishekkapoor/Documents/DATASCIENCE/mlops-gemini/kkbox_churn_pipeline/mlruns/224426942900072413
+creation_time: 1768734695120
+experiment_id: '224426942900072413'
+last_update_time: 1768734695120
+lifecycle_stage: active
+name: KKBox_Churn_Production

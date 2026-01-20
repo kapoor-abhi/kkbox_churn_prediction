@@ -3,13 +3,11 @@
 .dvc
 .dvcignore
 dvc.lock
-
 # Python virtual environment and cache
 .venv
 mlops_env/
 __pycache__/
 *.pyc
-
 # Local storage and temp files
 dvc_storage/
 mlruns/

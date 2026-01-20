@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  churn-api:
+    build: .
+    container_name: churn-api
+    ports:
+      - "8000:8000"
+    networks:
+      - mlops-network
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - mlops-network
+    depends_on:
+      - churn-api
+
+  grafana:
+    image: grafana/grafana:8.5.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - mlops-network
+    depends_on:
+      - prometheus
+
+networks:
+  mlops-network:
+    driver: bridge

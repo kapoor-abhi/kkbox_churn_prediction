@@ -1,0 +1,21 @@
+artifact_path: file:///Users/abhishekkapoor/Documents/DATASCIENCE/mlops-gemini/kkbox_churn_pipeline/mlruns/224426942900072413/models/m-7c685220e1da4dc89254281e75640db6/artifacts
+flavors:
+  lightgbm:
+    code: null
+    data: model.pkl
+    lgb_version: 4.6.0
+    model_class: lightgbm.sklearn.LGBMClassifier
+  python_function:
+    data: model.pkl
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.lightgbm
+    python_version: 3.10.8
+mlflow_version: 3.8.1
+model_id: m-7c685220e1da4dc89254281e75640db6
+model_size_bytes: 1001473
+model_uuid: m-7c685220e1da4dc89254281e75640db6
+prompts: null
+run_id: 90909fd98349413b9f3217989e9437d6
+utc_time_created: '2026-01-18 11:12:25.492505'

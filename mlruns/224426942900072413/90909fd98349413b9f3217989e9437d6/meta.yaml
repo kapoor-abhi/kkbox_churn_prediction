@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/abhishekkapoor/Documents/DATASCIENCE/mlops-gemini/kkbox_churn_pipeline/mlruns/224426942900072413/90909fd98349413b9f3217989e9437d6/artifacts
+end_time: 1768734751677
+entry_point_name: ''
+experiment_id: '224426942900072413'
+lifecycle_stage: active
+run_id: 90909fd98349413b9f3217989e9437d6
+run_name: unique-wren-167
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1768734695578
+status: 3
+tags: []
+user_id: abhishekkapoor

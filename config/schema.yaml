@@ -1,4 +1,3 @@
-# Expected schemas for raw data files
 train_v2.csv:
   msno: object
   is_churn: int64

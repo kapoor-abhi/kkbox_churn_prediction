@@ -1,16 +1,50 @@
 stages:
   validate_data:
-    cmd: python src/components/data_validation.py --config config/config.yaml --schema config/schema.yaml
+    cmd: python src/components/data_validation.py
     deps:
       - src/components/data_validation.py
-      - config/schema.yaml
       - data/raw
+    # No 'outs' here because it only checks quality
 
   data_ingestion:
-    cmd: python src/components/data_ingestion.py --config config/config.yaml
+    cmd: python src/components/data_ingestion.py
     deps:
       - src/components/data_ingestion.py
       - config/config.yaml
       - data/raw
     outs:
       - data/processed
+
+  feature_engineering:
+    cmd: python src/components/feature_engineering.py --config config/config.yaml
+    deps:
+      - src/components/feature_engineering.py
+      - src/components/data_processor.py
+      - data/processed
+    outs:
+      - data/featured
+      - data/model/feature_processor.pkl
+      
+  model_training:
+    cmd: python src/components/model_training.py --config config/config.yaml --params params.yaml
+    deps:
+      - src/components/model_training.py
+      - data/featured
+    params:
+      - training
+      - lgbm_params
+    outs:
+      - data/model/lgbm_model.pkl
+      - data/model/scaler.pkl
+      - data/model/encoders.pkl
+  drift_analysis:
+    cmd: python src/components/drift_detection.py
+    deps:
+      - src/components/drift_detection.py
+      - data/featured/master_features.parquet
+    outs:
+      - data/drift_report_deepchecks.html
+      - data/integrity_report.html
+
+
+ 

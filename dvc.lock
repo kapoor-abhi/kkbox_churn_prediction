@@ -1,13 +1,8 @@
 schema: '2.0'
 stages:
   validate_data:
-    cmd: python src/components/data_validation.py --config config/config.yaml --schema
-      config/schema.yaml
+    cmd: python src/components/data_validation.py
     deps:
-    - path: config/schema.yaml
-      hash: md5
-      md5: 9cf41ceac3641182d6969f7938717e11
-      size: 628
     - path: data/raw
       hash: md5
       md5: 3214f62dee8a9160aca9a24cf1468bbc.dir
@@ -15,15 +10,17 @@ stages:
       nfiles: 4
     - path: src/components/data_validation.py
       hash: md5
-      md5: 4d534188c58b74cd5ff9bd85742c68fd
-      size: 2591
+      md5: c202e1d831e0a69418d452143278b42c
+      size: 1175
+      isexec: true
   data_ingestion:
-    cmd: python src/components/data_ingestion.py --config config/config.yaml
+    cmd: python src/components/data_ingestion.py
     deps:
     - path: config/config.yaml
       hash: md5
       md5: 0406b419c321a021fb55196e8319468a
       size: 211
+      isexec: true
     - path: data/raw
       hash: md5
       md5: 3214f62dee8a9160aca9a24cf1468bbc.dir
@@ -31,11 +28,112 @@ stages:
       nfiles: 4
     - path: src/components/data_ingestion.py
       hash: md5
-      md5: ed5f82fc8d2595c65a395e609746f302
-      size: 3656
+      md5: 51fb4ac763fcce0c2cf9ef72a0b18da0
+      size: 1741
+      isexec: true
     outs:
     - path: data/processed
       hash: md5
-      md5: ca6d271a540b6d3613dd7316c8269ef2.dir
-      size: 1583189255
+      md5: ce9ecb96c9f77c976768f8e0453bd61b.dir
+      size: 1580374000
       nfiles: 25
+  feature_engineering:
+    cmd: python src/components/feature_engineering.py --config 
+      config/config.yaml
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: ce9ecb96c9f77c976768f8e0453bd61b.dir
+      size: 1580374000
+      nfiles: 25
+    - path: src/components/data_processor.py
+      hash: md5
+      md5: bc6908828430e6ec79700b3711ebe7b9
+      size: 3193
+    - path: src/components/feature_engineering.py
+      hash: md5
+      md5: 4d7ab8b800a9267850fec04793ea6ad8
+      size: 4491
+      isexec: true
+    outs:
+    - path: data/featured
+      hash: md5
+      md5: 46dd0237f70627f92645fe8587e7a82b.dir
+      size: 88914585
+      nfiles: 1
+    - path: data/model/feature_processor.pkl
+      hash: md5
+      md5: afd531bff68501cb8181936514d9ddab
+      size: 189
+  model_training:
+    cmd: python src/components/model_training.py --config config/config.yaml 
+      --params params.yaml
+    deps:
+    - path: data/featured
+      hash: md5
+      md5: 46dd0237f70627f92645fe8587e7a82b.dir
+      size: 88914585
+      nfiles: 1
+    - path: src/components/model_training.py
+      hash: md5
+      md5: f70bb2774a116a626ca7af566a255dad
+      size: 4407
+      isexec: true
+    params:
+      params.yaml:
+        lgbm_params:
+          objective: binary
+          metric: auc
+          n_estimators: 1000
+          learning_rate: 0.05
+          num_leaves: 31
+          max_depth: -1
+          min_child_samples: 20
+          subsample: 0.8
+          colsample_bytree: 0.8
+          reg_alpha: 0.1
+          reg_lambda: 0.1
+          n_jobs: -1
+          verbose: -1
+        training:
+          n_splits: 5
+          random_state: 42
+          target_col: is_churn
+          unused_cols:
+          - msno
+          - is_churn
+          - bd
+          - registration_init_time
+    outs:
+    - path: data/model/encoders.pkl
+      hash: md5
+      md5: 9f12ba3d6e7e4a7a6b4671028350bee8
+      size: 782
+    - path: data/model/lgbm_model.pkl
+      hash: md5
+      md5: 68e08651719c2ed218cfe7db8abb1c3b
+      size: 1001684
+    - path: data/model/scaler.pkl
+      hash: md5
+      md5: dd1cf3f57940ac281b705f8fbc026e26
+      size: 2023
+  drift_analysis:
+    cmd: python src/components/drift_detection.py
+    deps:
+    - path: data/featured/master_features.parquet
+      hash: md5
+      md5: 1b2d11476c1f71bb6ead25ab54e32c2c
+      size: 88914585
+    - path: src/components/drift_detection.py
+      hash: md5
+      md5: 04cf8d63c6e7ff0506d421ec019dc8a0
+      size: 2538
+    outs:
+    - path: data/drift_report_deepchecks.html
+      hash: md5
+      md5: 6799cb264820065bff164cffd66bdf90
+      size: 7905228
+    - path: data/integrity_report.html
+      hash: md5
+      md5: 9449572cbdc59db576becfd0132067c1
+      size: 7790131

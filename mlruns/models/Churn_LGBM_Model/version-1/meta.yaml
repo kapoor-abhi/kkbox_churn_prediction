@@ -1,0 +1,15 @@
+creation_timestamp: 1768734751653
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1768734751653
+model_id: m-7c685220e1da4dc89254281e75640db6
+name: Churn_LGBM_Model
+run_id: 90909fd98349413b9f3217989e9437d6
+run_link: null
+source: models:/m-7c685220e1da4dc89254281e75640db6
+status: READY
+status_message: null
+storage_location: file:///Users/abhishekkapoor/Documents/DATASCIENCE/mlops-gemini/kkbox_churn_pipeline/mlruns/224426942900072413/models/m-7c685220e1da4dc89254281e75640db6/artifacts
+user_id: null
+version: 1

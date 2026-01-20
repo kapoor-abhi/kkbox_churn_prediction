@@ -1,0 +1,10 @@
+artifact_location: file:///Users/abhishekkapoor/Documents/DATASCIENCE/mlops-gemini/kkbox_churn_pipeline/mlruns/224426942900072413/models/m-7c685220e1da4dc89254281e75640db6/artifacts
+creation_timestamp: 1768734745468
+experiment_id: '224426942900072413'
+last_updated_timestamp: 1768734751629
+model_id: m-7c685220e1da4dc89254281e75640db6
+model_type: null
+name: model
+source_run_id: 90909fd98349413b9f3217989e9437d6
+status: 2
+status_message: null
