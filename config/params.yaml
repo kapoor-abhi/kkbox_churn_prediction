@@ -5,7 +5,6 @@ training:
   unused_cols: 
     - "msno"
     - "is_churn"
-    - "bd"
     - "registration_init_time"
 
 lgbm_params:

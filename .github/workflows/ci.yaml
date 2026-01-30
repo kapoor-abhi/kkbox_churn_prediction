@@ -1,0 +1,57 @@
+name: KKBox MLOps CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # Job 1: Code Quality & Logic
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest flake8 httpx
+        
+    - name: Lint with Flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 src tests app.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        
+    - name: Run Unit Tests
+      run: |
+        # We define PYTHONPATH so pytest finds 'src'
+        export PYTHONPATH=$PYTHONPATH:.
+        # This runs the logic tests we wrote earlier
+        pytest tests/
+
+  # Job 2: Test Docker Build (Simulate CD)
+  docker-build:
+    needs: code-quality # Only run if tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Docker Image
+        run: |
+          # We try to build the API image. 
+          # Note: This will fail if it tries to COPY data/model/pipeline.pkl and it doesn't exist in git.
+          # For CI purposes, we create a dummy file to ensure Dockerfile syntax is correct.
+          mkdir -p data/model
+          touch data/model/production_pipeline.pkl
+          
+          docker build -t churn-api:test -f docker/Dockerfile.api .
+          
+      - name: Verify Image
+        run: docker images | grep churn-api

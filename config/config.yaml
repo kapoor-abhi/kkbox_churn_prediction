@@ -1,6 +1,7 @@
 data_ingestion:
   root_dir: data
-  raw_data_dir: data/raw
+  # Note the s3:// prefix and the bucket name
+  raw_data_dir: s3://kkbox-raw 
   train_data_file: train_v2.csv
   members_data_file: members_v3.csv
   transactions_data_file: transactions_v2.csv

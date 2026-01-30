@@ -1,30 +1,97 @@
 version: "3.9"
 
 services:
-  churn-api:
-    build: .
-    container_name: churn-api
+  # 1. MinIO (Storage)
+  minio:
+    image: minio/minio:RELEASE.2023-09-30T07-02-29Z
+    container_name: mlops-minio
+    restart: always
     ports:
-      - "8000:8000"
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio_data:/data
     networks:
       - mlops-network
-    restart: always
 
-  prometheus:
-    image: prom/prometheus:v2.37.0
-    container_name: prometheus
+  # 2. Postgres (Metadata)
+  postgres:
+    image: postgres:13
+    container_name: mlops-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - mlops-network
+
+  # 3. MLflow (Experiment Tracking)
+  mlflow:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile.mlflow
+    container_name: mlops-mlflow
+    restart: always
+    ports:
+      - "5001:5000"
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - mlops-network
+
+  # 4. Churn API (The Model)
+  churn-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: mlops-api
+    restart: always
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./data/live_traffic.jsonl:/app/data/live_traffic.jsonl
+    environment:
+      PYTHONPATH: /app
+    networks:
+      - mlops-network
+    depends_on:
+      - minio
+      - mlflow
+
+  # 5. Prometheus (Metrics Collector)
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: mlops-prometheus
+    restart: always
     ports:
       - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - mlops-network
     depends_on:
       - churn-api
 
+  # 6. Grafana (Visualization Dashboard)
   grafana:
-    image: grafana/grafana:8.5.2
-    container_name: grafana
+    image: grafana/grafana:10.0.0
+    container_name: mlops-grafana
+    restart: always
     ports:
       - "3000:3000"
     environment:

@@ -1,0 +1,14 @@
+FROM python:3.9-slim
+
+# Install system dependencies for Postgres
+RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+
+# Install Python libraries
+RUN pip install mlflow>=2.14.0 boto3 psycopg2-binary
+
+# --- FIX: Use Shell Form (No brackets) to allow variable expansion ---
+CMD mlflow server \
+    --backend-store-uri $MLFLOW_BACKEND_STORE_URI \
+    --default-artifact-root s3://mlflow-artifacts \
+    --host 0.0.0.0 \
+    --port 5000

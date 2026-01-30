@@ -1,0 +1,8 @@
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY src/ src/
+COPY config/ config/
+# Run a simple loop or just the script
+CMD ["watch", "-n", "3600", "python", "src/components/drift_detection.py"]

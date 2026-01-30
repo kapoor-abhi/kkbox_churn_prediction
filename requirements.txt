@@ -15,3 +15,8 @@ pandera
 boto3
 python-dotenv
 evidently
+s3fs
+boto3
+pyarrow
+fastparquet
+python-dotenv

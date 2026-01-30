@@ -1,27 +1,23 @@
 # Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
-env/
 venv/
-pip-log.txt
-pip-delete-this-directory.txt
+.env
+.env2
+minio_data
+postgres_data
+kkbox_churn.egg-info
+mlruns
 
-# Data - We want DVC to handle this
-/data/raw/
-/data/processed/
-/data/featured/
-/data/model/
+# Data (Crucial: Don't push large files)
+data/
+!data/.gitkeep
+.pytest_cache
 
 # DVC
 .dvc/cache
-dvc_storage/
+.dvc/tmp
 
-# Other
-.DS_Storedata/raw
-data/processed
-data/featured
-data/model
-.env
+# IDE
+.vscode/
+.idea/
