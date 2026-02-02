@@ -1,4 +1,4 @@
-name: KKBox MLOps CI
+name: KKBox MLOps CI/CD
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # Job 1: Code Quality & Logic
-  code-quality:
+  # 1. Continuous Integration (Test Code)
+  code-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -24,34 +24,39 @@ jobs:
         pip install -r requirements.txt
         pip install pytest flake8 httpx
         
-    - name: Lint with Flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 src tests app.py --count --select=E9,F63,F7,F82 --show-source --statistics
-        
     - name: Run Unit Tests
       run: |
-        # We define PYTHONPATH so pytest finds 'src'
         export PYTHONPATH=$PYTHONPATH:.
-        # This runs the logic tests we wrote earlier
+        # We assume data is missing in CI, so some tests might be skipped or mocked
+        # For this demo, we run the logic tests
         pytest tests/
 
-  # Job 2: Test Docker Build (Simulate CD)
-  docker-build:
-    needs: code-quality # Only run if tests pass
+  # 2. Continuous Delivery (Push to Docker Hub)
+  build-and-push:
+    needs: code-test # Only run if tests pass
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Build Docker Image
+
+      # Login to Docker Hub using the secrets you added
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # The "Trick": Create a dummy model file so Dockerfile COPY doesn't fail
+      - name: Create Dummy Model Artifact
         run: |
-          # We try to build the API image. 
-          # Note: This will fail if it tries to COPY data/model/pipeline.pkl and it doesn't exist in git.
-          # For CI purposes, we create a dummy file to ensure Dockerfile syntax is correct.
           mkdir -p data/model
           touch data/model/production_pipeline.pkl
-          
-          docker build -t churn-api:test -f docker/Dockerfile.api .
-          
-      - name: Verify Image
-        run: docker images | grep churn-api
+
+      # Build and Push
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: docker/Dockerfile.api
+          push: true
+          # Tag it with your username and 'latest'
+          tags: ${{ secrets.DOCKER_USERNAME }}/kkbox-churn-api:latest

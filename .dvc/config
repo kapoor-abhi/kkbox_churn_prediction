@@ -1,8 +1,8 @@
 [core]
-    remote = r2-remote
-['remote "local_remote"']
-    url = /Users/abhishekkapoor/Datascience/MLOPs gemin/dvc_storage
-['remote "r2-remote"']
-    url = s3://kkbox-chrun-remote
-    endpointurl = https://a21a46bd98047371b55e3d287ae424d5.r2.cloudflarestorage.com
-    region = auto
+    remote = local-s3
+['remote "local-s3"']
+    url = s3://dvc-storage
+    endpointurl = http://localhost:9000
+    access_key_id = admin
+    secret_access_key = password123
+    use_ssl = false

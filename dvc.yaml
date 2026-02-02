@@ -15,22 +15,23 @@ stages:
     outs:
       - data/featured/master_features.parquet
 
-  # NEW: Validation runs BEFORE training
   data_validation:
     cmd: python src/components/data_validation.py
     deps:
       - src/components/data_validation.py
       - data/featured/master_features.parquet
-    # No outputs, it just crashes if data is bad
 
   model_training:
-    cmd: PYTHONPATH=. python src/components/model_training.py --config config/config.yaml --params config/params.yaml
+    # --- FIX: Force localhost for local execution ---
+    cmd: MLFLOW_S3_ENDPOINT_URL=http://localhost:9000 PYTHONPATH=. python src/components/model_training.py --config config/config.yaml --params config/params.yaml
+    # -----------------------------------------------
     deps:
       - src/components/model_training.py
       - src/components/data_processor.py
       - data/featured/master_features.parquet
     params:
-      - training
-      - lgbm_params
+      - config/params.yaml:
+        - training
+        - lgbm_params
     outs:
       - data/model/production_pipeline.pkl
