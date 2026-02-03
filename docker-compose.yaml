@@ -56,9 +56,10 @@ services:
 
   # 4. Churn API (The Model)
   churn-api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
+    #build:
+     # context: .
+      #dockerfile: docker/Dockerfile.api
+    image: abhyyshake/kkbox-churn-api:latest  
     container_name: mlops-api
     restart: always
     ports:

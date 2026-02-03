@@ -45,3 +45,19 @@ down:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	rm -rf .pytest_cache
+
+# ... existing commands ...
+
+# Deployment Helper
+# Replace 'your_username' with your actual Docker Hub username
+DOCKER_USER = abhyyshake
+IMAGE_NAME = kkbox-churn-api
+
+deploy:
+	@echo "🚀 Building Production Image with REAL Model..."
+	docker build -t $(DOCKER_USER)/$(IMAGE_NAME):latest -f docker/Dockerfile.api .
+	
+	@echo "☁️  Pushing to Docker Hub..."
+	docker push $(DOCKER_USER)/$(IMAGE_NAME):latest
+	
+	@echo "✅ Deployment Complete! The new model is live on Docker Hub."
