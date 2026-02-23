@@ -5,18 +5,17 @@ import sys
 import json
 import warnings
 
-# Suppress warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# -------------------------- IMPORTS (FIXED: OLDER VERSION COMPATIBLE) --------------------------
+
 from evidently import Report
-# FIX: Use 'evidently.presets' instead of 'evidently.metric_preset'
+
 from evidently.presets import DataDriftPreset 
 # -----------------------------------------------------------------------------------------------
 
 def run_drift_analysis():
-    # -------------------------- Step 1: Load Real Project Data --------------------------
+    
     ref_path = "data/featured/master_features.parquet"
     curr_path = "data/live_traffic.jsonl"
     output_path = "data/monitoring/drift_report.html" 
