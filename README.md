@@ -1,6 +1,4 @@
-# KKBox Music Streaming Churn Predictor
-
-### End-to-End MLOps Platform for Real-Time Churn Prediction
+## End-to-End MLOps Platform for Real-Time Churn Prediction
 
 **Architecture Level: MLOps**  
 **(Automated Pipelines, CI/CD, Continuous Monitoring)**
