@@ -28,7 +28,7 @@ The system is composed of four major layers:
 **High-Level Architecture Diagram**
 
 <p align="center">
-  <img src="screenshots/architecture.png" width="600"/>
+  <img src="screenshots/architectures.png" width="600"/>
 </p>
 
 ---
