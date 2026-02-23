@@ -1,7 +1,7 @@
 ## End-to-End MLOps Platform for Real-Time Churn Prediction
 
 **Architecture Level: MLOps**  
-**(Automated Pipelines, CI/CD, Continuous Monitoring)**
+**(Automated Pipelines, CI/CD, Continuous Monitoring) Via Github Actions & Dockerhub**
 
 ---
 
