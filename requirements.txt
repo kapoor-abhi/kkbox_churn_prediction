@@ -8,6 +8,10 @@ pandas
 numpy<2.0.0
 scikit-learn
 lightgbm
+matplotlib
+seaborn
+plotly
+streamlit
 mlflow
 pyarrow
 dask

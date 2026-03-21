@@ -6,6 +6,8 @@ training:
     - "msno"
     - "is_churn"
     - "registration_init_time"
+    - "last_transaction_date"
+    - "last_membership_expire_date"
 
 lgbm_params:
   objective: "binary"
