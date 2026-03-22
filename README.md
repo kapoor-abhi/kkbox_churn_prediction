@@ -43,9 +43,6 @@
 
 <h2 align="center">1. Executive Summary & Business Problem</h2>
 
-> [!NOTE]
-> This project implements a production-grade Machine Learning system to predict user churn for a music streaming platform (KKBOX dataset). Unlike notebook-based ML projects, this repository focuses on system design, automation, reproducibility, and observability across the entire ML lifecycle.
-
 Many subscription-based businesses incorrectly assume that a lack of interaction signifies incoming churn, or that aggressive promotions strictly retain users. This project tackles the complexities of **subscriber churn prediction** through advanced feature engineering and behavioral segmentation, challenging conventional wisdom with hard data.
 
 ---
