@@ -1,7 +1,9 @@
-## End-to-End MLOps Platform for Real-Time Churn Prediction
+<h2 align="center">End-to-End MLOps Platform for Real-Time Churn Prediction</h2>
 
-**Architecture Level: MLOps**  
-**(Automated Pipelines, CI/CD, Continuous Monitoring) Via Github Actions & Dockerhub**
+<p align="center">
+  <b>Architecture Level: MLOps</b><br>
+  <b>(Automated Pipelines, CI/CD, Continuous Monitoring) Via Github Actions & Dockerhub</b>
+</p>
 
 <p align="center">
   <!-- Languages -->
@@ -39,7 +41,7 @@
 
 ---
 
-## 1. Executive Summary & Business Problem
+<h2 align="center">1. Executive Summary & Business Problem</h2>
 
 > [!NOTE]
 > This project implements a production-grade Machine Learning system to predict user churn for a music streaming platform (KKBOX dataset). Unlike notebook-based ML projects, this repository focuses on system design, automation, reproducibility, and observability across the entire ML lifecycle.
@@ -48,9 +50,9 @@ Many subscription-based businesses incorrectly assume that a lack of interaction
 
 ---
 
-## 2. Business Insights & Discoveries
+<h2 align="center">2. Business Insights & Discoveries</h2>
 
-By observing almost **1 million subscribers**, we extracted non-intuitive but highly actionable insights. 
+By observing almost **1 million subscribers**, I extracted non-intuitive but highly actionable insights. 
 
 > [!IMPORTANT]
 > **Definition of Churn:** Based on the official KKBox problem framing, churn is defined as **no new valid service subscription within 30 days after the current membership expires**.
@@ -60,10 +62,10 @@ For this project ecosystem:
 - All behavioral predictive features are rigorously snapshotted at **February 28, 2017** to prevent target leakage. Anything from March 2017 onward is completely hidden during prediction.
 
 ### A. The "Ghost" User Paradox
-Users with zero transactions in our active observation window (Ghost Users) exhibited an **8.06%** churn rate, whereas highly active users (1+ transactions) churned at a much higher **17.81%**. 
+Users with zero transactions in my active observation window (Ghost Users) exhibited an **8.06%** churn rate, whereas highly active users (1+ transactions) churned at a much higher **17.81%**. 
 
-> [!TIP]
-> **Key Discovery:** In this dataset, "Ghost" users often represent accounts that have already churned long ago (no recent transactions) or are on indefinite free tiers. Active interaction in music streaming often precedes subscription modifications or competitive switching. True retention efforts should focus on users showing volatile engagement drops, not just the permanently dormant.
+> [!NOTE]
+> **Insight:** In this dataset, "Ghost" users often represent accounts that have already churned long ago (no recent transactions) or are on indefinite free tiers. Active interaction in music streaming often precedes subscription modifications or competitive switching. True retention efforts should focus on users showing volatile engagement drops, not just the permanently dormant.
 
 ### B. Promotional Sensitivity is Toxic to Retention
 Subscriptions built purely on promotions are incredibly fragile.
@@ -71,46 +73,46 @@ Subscriptions built purely on promotions are incredibly fragile.
 - Users with **1-2 promotional transactions**: ~88.47% churn.
 - Users with **>2 promotional transactions**: **100% churn.**
 
-> [!TIP]
-> **Actionable Insight:** Users hunting for promotions are virtually guaranteed to churn when requested to pay full price. The business should limit deep sequential discounting to prevent training users to churn the moment standard pricing kicks in.
+> [!NOTE]
+> **Insight:** Users hunting for promotions are virtually guaranteed to churn when requested to pay full price. The business should limit deep sequential discounting to prevent training users to churn the moment standard pricing kicks in.
 
 ### C. Active Cancellation (`is_cancel`) vs True Churn Behavior
 A critical domain discovery is that clicking "cancel" (`is_cancel`) does **not** intrinsically equate to true churn. A user may cancel their service subscription merely to change service plans (e.g., from an active billing cycle to a long-term promotion). 
 
-> [!TIP]
-> **Discovery:** The model's `cancel_rate` feature doesn't simply leak the target. Instead, it gauges the user's historical subscription volatility leading up to the target month of March. Many users actively cancel in one entry, only to extend their membership immediately after with a different plan.
+> [!NOTE]
+> **Insight:** The model's `cancel_rate` feature doesn't simply leak the target. Instead, it gauges the user's historical subscription volatility leading up to the target month of March. Many users actively cancel in one entry, only to extend their membership immediately after with a different plan.
 
 ### D. The Auto-Renew Trap
-While auto-renewals stabilize baseline revenue, users in our dataset exhibiting manual renewal behavior showed lower churn (8.53%) than majority auto-renew segments (13.72%). 
+While auto-renewals stabilize baseline revenue, users in my dataset exhibiting manual renewal behavior showed lower churn (8.53%) than majority auto-renew segments (13.72%). 
 
-> [!TIP]
-> **Discovery:** This anomaly often suggests that manual renewers represent hyper-loyal active buyers, while auto-renew flags can be associated with "set-and-forget" users who eventually cancel en masse during billing audits.
+> [!NOTE]
+> **Insight:** This anomaly often suggests that manual renewers represent hyper-loyal active buyers, while auto-renew flags can be associated with "set-and-forget" users who eventually cancel en masse during billing audits.
 
 ### E. Dominant Payment Methods
-The vast majority of our revenue flows through specific regional gateways. Payment Method `41` dwarfs all others (nearly **696,000** usages), followed by methods `39` (**137,000**) and `38` (**115,000**). 
+The vast majority of my revenue flows through specific regional gateways. Payment Method `41` dwarfs all others (nearly **696,000** usages), followed by methods `39` (**137,000**) and `38` (**115,000**). 
 
-> [!TIP]
-> **Strategy Insight:** Optimizing UX friction and payment success rates on Gateway 41 is a top priority for retention, as payment failure on this node would catastrophically impact the bottom line.
+> [!NOTE]
+> **Insight:** Optimizing UX friction and payment success rates on Gateway 41 is a top priority for retention, as payment failure on this node would catastrophically impact the bottom line.
 
 ---
 
-## 3. Data Cleaning, Assumptions & Engineering
+<h2 align="center">3. Data Cleaning, Assumptions & Engineering</h2>
 
-A machine learning system is only as good as the domain knowledge encoded into its features. We approached the KKBox event dataset with rigorous temporal snapshotting.
+A machine learning system is only as good as the domain knowledge encoded into its features. I approached the KKBox event dataset with rigorous temporal snapshotting.
 
 ### Assumptions & Data Handling Constraints
 
 > [!WARNING]
-> **Strict Leakage Barricade**: We establish a hard snapshot at **2017-02-28**. Although a user might shift their expiration date back and forth via cancellations and renewals in March, our model must predict the 30-day survival purely on metrics generated before February 28th.
+> **Strict Leakage Barricade**: I established a hard snapshot at **2017-02-28**. Although a user might shift their expiration date back and forth via cancellations and renewals in March, my model must predict the 30-day survival purely on metrics generated before February 28th.
 
 - **The Temporal Window & Training Cohort**: As defined by KKBox, the training data evaluated concerns users whose subscriptions expire **between 2017-03-01 to 2017-03-31**. The test split (typically for April) functions identically via `transactions_v2.csv` extended up to 3/31/2017.
-- **Handling Complex Renewals**: A user may actively cancel on March 15th, moving their expiration back to March 16th, but resubscribe to a two-month plan on April 1st (within the 30 days). Our models trust the `is_churn` ground truth labels supplied by KKBox, but internally depend on the `total_cancel_count` metric developed from historical transactions to weigh the likelihood of such complex reversals.
+- **Handling Complex Renewals**: A user may actively cancel on March 15th, moving their expiration back to March 16th, but resubscribe to a two-month plan on April 1st (within the 30 days). My models trust the `is_churn` ground truth labels supplied by KKBox, but internally depend on the `total_cancel_count` metric developed from historical transactions to weigh the likelihood of such complex reversals.
 - **Age (`bd`) Regularization**: Ages <= 0 (or outliers like -7000) or > 100 were nullified to address extreme garbage inputs mentioned in the data distribution. Missing ages were thoughtfully imputed using the training aggregate median (28.0) to preserve distribution shape without introducing future knowledge.
 - **Handling Extreme Recency Dates**: `days_since_last_transaction` evaluates behavior proximity up to Feb 28th. Users without history defaulted to `-1` to explicitly route missing branches gracefully in the LightGBM models.
 - **Ghost Segment Clipping**: Extreme outliers in daily listening times were clipped to $24 \times 60 \times 60$ seconds, removing physically impossible user logs (e.g., streaming for 30 hours in one day, likely bot or shared-account activity).
 
 ### Advanced Feature Engineering
-We distilled 100M+ raw user, transaction, and log rows down to 36 potent aggregated features via Dask:
+I distilled 100M+ raw user, transaction, and log rows down to 36 potent aggregated features via Dask:
 1. **Engagement Velocity (`recent_activity_ratio`)**: Compares active days in the most recent 30-day window against the previous 30 days. This explicitly captures accelerating or decelerating usage trends.
 2. **Value Attrition (`cancel_rate` & `promo_ratio`)**: Users routinely cancelling or hunting promotions are flagged not just by count, but by the ratio of these actions to their total footprint (`total_cancel_count / total_transactions`).
 3. **Consumption Depth (`completion_rate`)**: Instead of raw songs played, calculating the percentage of songs listened to 100% completion perfectly measures user satisfaction with the platform's recommendation algorithms.
@@ -118,7 +120,7 @@ We distilled 100M+ raw user, transaction, and log rows down to 36 potent aggrega
 
 ---
 
-## 4. System Architecture
+<h2 align="center">4. System Architecture</h2>
 
 The platform follows a Lakehouse-style architecture, supports large-scale data processing, enforces training–serving consistency, and exposes predictions through a containerized FastAPI service with real-time monitoring.
 
@@ -136,7 +138,7 @@ The system is composed of four major layers:
 
 ---
 
-## 5. Technology Stack
+<h2 align="center">5. Technology Stack</h2>
 
 ### Languages
 *   `Python 3.9+`
@@ -175,7 +177,7 @@ The system is composed of four major layers:
 
 ---
 
-## 6. Data Pipeline Design & MLOps
+<h2 align="center">6. Data Pipeline Design & MLOps</h2>
 
 ### Phase 1: Data Ingestion (Lakehouse Pattern)
 *   Raw user activity logs stored as Bronze CSVs in MinIO.
@@ -211,7 +213,7 @@ To prevent training–serving skew:
 
 ---
 
-## 7. Production Deployment & Serving
+<h2 align="center">7. Production Deployment & Serving</h2>
 
 ### FastAPI Inference Service
 The trained model is served via a FastAPI application running inside a Docker container.
@@ -229,7 +231,7 @@ MinIO acts as a local S3-compatible data lake for raw and processed datasets.
 
 ---
 
-## 8. Experiment Tracking & Model Registry
+<h2 align="center">8. Experiment Tracking & Model Registry</h2>
 
 All experiments, metrics, and model artifacts are tracked using **MLflow**. This enables full traceability between:
 *   Code version (**Git commit**)
@@ -242,7 +244,7 @@ All experiments, metrics, and model artifacts are tracked using **MLflow**. This
 
 ---
 
-## 9. Monitoring & Observability
+<h2 align="center">9. Monitoring & Observability</h2>
 
 ### Prometheus Metrics
 Prometheus scrapes application metrics such as request count and latency.
@@ -263,10 +265,10 @@ Live inference inputs are asynchronously logged and analyzed offline using **Evi
 
 ---
 
-## 10. Future Improvements
+<h2 align="center">10. Future Improvements</h2>
 
-> [!TIP]
-> **Roadmap:**
+> [!NOTE]
+> **Insight:**
 > *   Kubernetes-based horizontal scaling.
 > *   Feature Store integration (e.g., Feast).
 > *   Online A/B testing with challenger models.
